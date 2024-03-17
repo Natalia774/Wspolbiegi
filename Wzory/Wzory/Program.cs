@@ -4,7 +4,7 @@ class Liczenie
 {   int a = 3;
     int b = 4;
 
-    public  int Dodawanie(int a, int b)
+    public int Dodawanie(int a, int b)
     {
       
         int suma = a + b;
@@ -17,10 +17,13 @@ class Liczenie
     public int Roznica(int c, int d)
     {
         
-        int roznica = a - b;
+        int roznica = c - d;
         Console.WriteLine("Różnica: " + roznica);
         return roznica;
     }
      
-
+    public static void Main ()
+    {
+        Console.WriteLine("Huj");
+    }
  }
