@@ -2,23 +2,22 @@
 
 class Liczenie
 {
-    static void Main()
+
+    static void Dodawanie()
     {
-        Console.WriteLine("Podaj pierwszą liczbę:");
-        int a = Convert.ToInt32(Console.ReadLine());
-
-        Console.WriteLine("Podaj drugą liczbę:");
-        int b = Convert.ToInt32(Console.ReadLine());
-
-
+        int a = 3;
+        int b = 4;
         int suma = a + b;
         Console.WriteLine("Suma: " + suma);
-
-
+    }
+    
+    static void Roznica()
+    {
+        int a = 6;
+        int b = 1;
         int roznica = a - b;
         Console.WriteLine("Różnica: " + roznica);
-
-        Console.ReadLine();
-
     }
-}
+     
+
+ }
