@@ -1,22 +1,25 @@
 ﻿using System;
 
 class Liczenie
-{
+{   int a = 3;
+    int b = 4;
 
-    static void Dodawanie()
+    public  int Dodawanie(int a, int b)
     {
-        int a = 3;
-        int b = 4;
+      
         int suma = a + b;
         Console.WriteLine("Suma: " + suma);
+        return suma;
     }
-    
-    static void Roznica()
+
+    int c = 6;
+    int d = 1;
+    public int Roznica(int c, int d)
     {
-        int a = 6;
-        int b = 1;
+        
         int roznica = a - b;
         Console.WriteLine("Różnica: " + roznica);
+        return roznica;
     }
      
 
