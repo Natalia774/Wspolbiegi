@@ -61,15 +61,7 @@ namespace Model
                 {
                     double newX = Canvas.GetLeft(ellipse) + speedX;
                     double newY = Canvas.GetTop(ellipse) + speedY;
-                    if (newX >= Canvas.ActualWidth - ellipse.Width || newX <= 0)
-                    {
-                        speedX *= -1;
-                    }
 
-                    if (newY >= Canvas.ActualHeight - ellipse.Height || newY <= 0)
-                    {
-                        speedY *= -1;
-                    }
                     Canvas.SetLeft(ellipse, newX);
                     Canvas.SetTop(ellipse, newY);
                 };
