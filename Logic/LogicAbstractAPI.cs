@@ -6,9 +6,9 @@ namespace Logic
 {
     public abstract class LogicAbstractAPI
     {
-        public abstract void Start(int nrOfBalls);
+        public abstract void StartGame(int ballsCount);
         public abstract DataAbstractAPI getDataAPI();
-        public static LogicAbstractAPI CreateLogicAPI()
+        public static LogicAbstractAPI LogicAPIConstruct()
         {
             return new LogicAPI();
         }
@@ -28,10 +28,10 @@ namespace Logic
             return this.dataAPI;
         }
 
-        public override void Start(int nrOfBalls)
+        public override void StartGame(int nrOfBalls)
         {
-            Vector2 maxPosition = new Vector2(dataAPI.GetBoardWidth(), dataAPI.GetBoardHeight());
-            Vector2 maxVelocity = new Vector2(2.0f, 2.0f);
+            Vector2 maxPos = new Vector2(dataAPI.GetBoardWidth(), dataAPI.GetBoardHeight());
+            Vector2 maxVel = new Vector2(2.0f, 2.0f);
             int radius = 2;
 
             Random Rand = new Random();
@@ -40,10 +40,10 @@ namespace Logic
             {
                 IBall ball = dataAPI.CreateBall(
                     new Vector2(
-                        ((float)Rand.NextDouble() * (maxPosition.X - 8.0F - float.Epsilon)) + (4.0F + float.Epsilon),
-                        ((float)Rand.NextDouble() * (maxPosition.Y - 8.0F - float.Epsilon)) + (4.0F + float.Epsilon)
+                        ((float)Rand.NextDouble() * (maxPos.X - 8.0F - float.Epsilon)) + (4.0F + float.Epsilon),
+                        ((float)Rand.NextDouble() * (maxPos.Y - 8.0F - float.Epsilon)) + (4.0F + float.Epsilon)
                     ),
-                    maxVelocity, radius);
+                    maxVel, radius);
             }
         }
 

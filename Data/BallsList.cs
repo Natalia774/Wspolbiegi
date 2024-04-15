@@ -3,11 +3,11 @@ using System.Numerics;
 
 namespace Data
 {
-    internal class BallsCollection
+    internal class BallsList
     {
         private List<IBall> balls;
 
-        public BallsCollection()
+        public BallsList()
         {
             balls = new List<IBall>();
         }
@@ -19,20 +19,11 @@ namespace Data
             balls.Add(ball);
             return ball;
         }
+        
 
-        public List<IBall> GetAllBalls()
+        public IBall GetBall(int ID)
         {
-            return balls;
-        }
-
-        public void Clear()
-        {
-            balls.Clear();
-        }
-
-        public IBall GetBall(int ballId)
-        {
-            return balls[ballId];
+            return balls[ID];
         }
 
         public int GetBallsCount()

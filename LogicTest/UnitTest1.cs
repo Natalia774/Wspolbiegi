@@ -38,7 +38,7 @@ namespace LogicTest
             dataAPIField.SetValue(logicAPI, dataAPIMock.Object);
 
             // Wywołujemy metodę Start
-            logicAPI.Start(5);
+            logicAPI.StartGame(5);
 
             // Sprawdzamy, czy metoda CreateBall została wywołana poprawnie
             dataAPIMock.Verify(m => m.CreateBall(It.IsAny<Vector2>(), It.IsAny<Vector2>(), It.IsAny<int>()), Times.Exactly(5));

@@ -15,9 +15,13 @@ namespace Data
         }
     }
 
-    internal class DataAPI : DataAbstractAPI
-    {
-        private readonly BallsCollection balls;
+    internal class DataAPI : DataAbstractAPI { 
+        private readonly BallsList ballsCollection;
+        public DataAPI()
+        {
+            ballsCollection = new BallsList();
+        }
+        
         public override int GetBoardWidth()
         {
             return Board.width;
@@ -28,24 +32,20 @@ namespace Data
             return Board.height;
         }
 
-        public DataAPI()
-        {
-            balls = new BallsCollection();
-        }
+        
 
         public override IBall CreateBall(Vector2 position, Vector2 velocity, int radius)
         {
-            return balls.CreateBall(position, velocity, radius);
+            return ballsCollection.CreateBall(position, velocity, radius);
         }
 
+        public override IBall GetBall(int i)
+        {
+            return ballsCollection.GetBall(i);
+        }
         public override int GetBallsCount()
         {
-            return balls.GetBallsCount();
-        }
-
-        public override IBall GetBall(int index)
-        {
-            return balls.GetBall(index);
+            return ballsCollection.GetBallsCount();
         }
     }
 }

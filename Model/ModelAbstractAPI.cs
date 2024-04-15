@@ -39,7 +39,7 @@ namespace Model
         public ModelAPI()
         {
             dataAPI = DataAbstractAPI.CreateAPI();
-            logicAPI = LogicAbstractAPI.CreateLogicAPI();
+            logicAPI = LogicAbstractAPI.LogicAPIConstruct();
             Canvas = new Canvas();
             ellipseCollection = new List<Ellipse>();
             Canvas.HorizontalAlignment = HorizontalAlignment.Stretch;
@@ -94,11 +94,23 @@ namespace Model
                 storyboard.Pause();
             }
         }
-
+        private bool CheckForOverlap(double x, double y)
+        {
+            foreach (var existingEllipse in ellipseCollection)
+            {
+                double existingX = Canvas.GetLeft(existingEllipse);
+                double existingY = Canvas.GetTop(existingEllipse);
+                if (Math.Abs(existingX - x) < 20 && Math.Abs(existingY - y) < 20)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
 
         public override void CreateEllipses(int numberOfBalls)
         {
-            logicAPI.Start(numberOfBalls);
+            logicAPI.StartGame(numberOfBalls);
 
             for (int i = 0; i < numberOfBalls; i++)
             {
@@ -112,8 +124,6 @@ namespace Model
 
                 double x = random.Next(0, (int)Canvas.Width - 10);
                 double y = random.Next(0, (int)Canvas.Height - 10);
-
-                // Sprawdzamy, czy nowa elipsa nie nakłada się na istniejące elipsy
                 bool isOverlapping = CheckForOverlap(x, y);
                 while (isOverlapping)
                 {
@@ -122,7 +132,6 @@ namespace Model
                     isOverlapping = CheckForOverlap(x, y);
                 }
 
-                // Ustawiamy pozycję nowej elipsy
                 Canvas.SetLeft(ellipse, x);
                 Canvas.SetTop(ellipse, y);
 
@@ -131,21 +140,7 @@ namespace Model
             }
         }
 
-        private bool CheckForOverlap(double x, double y)
-        {
-            foreach (var existingEllipse in ellipseCollection)
-            {
-                double existingX = Canvas.GetLeft(existingEllipse);
-                double existingY = Canvas.GetTop(existingEllipse);
-
-                // Sprawdzamy czy nowa elipsa nakłada się na istniejącą elipsę
-                if (Math.Abs(existingX - x) < 20 && Math.Abs(existingY - y) < 20)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
+        
 
     }
 }
