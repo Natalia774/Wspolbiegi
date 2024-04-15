@@ -15,7 +15,6 @@ namespace Model
 {
     public abstract class ModelAbstractAPI
     {
-        //public abstract void StartSimulation(int nrOfBalls);
         public abstract void CreateEllipses(int nrOfBalls);
         public abstract Canvas Canvas { get; set; }
         public abstract List<Ellipse> ellipseCollection { get; }
@@ -55,37 +54,29 @@ namespace Model
         {
             foreach (var ellipse in ellipseCollection)
             {
-                double speedX = GetRandomSpeed(); 
-                double speedY = GetRandomSpeed(); 
+                double speedX = 4; 
+                double speedY = 4; 
 
                 CompositionTarget.Rendering += (sender, e) =>
                 {
                     double newX = Canvas.GetLeft(ellipse) + speedX;
                     double newY = Canvas.GetTop(ellipse) + speedY;
-
-                    // Sprawdź, czy kulka dotknęła krawędzi ramki i jeśli tak, odwróć jej kierunek
                     if (newX >= Canvas.ActualWidth - ellipse.Width || newX <= 0)
                     {
-                        speedX *= -1; // Odwróć kierunek w osi X
+                        speedX *= -1;
                     }
 
                     if (newY >= Canvas.ActualHeight - ellipse.Height || newY <= 0)
                     {
-                        speedY *= -1; // Odwróć kierunek w osi Y
+                        speedY *= -1;
                     }
-
-                    // Aktualizuj pozycję kulki
                     Canvas.SetLeft(ellipse, newX);
                     Canvas.SetTop(ellipse, newY);
                 };
             }
         }
 
-        private double GetRandomSpeed()
-        {
-            Random random = new Random();
-            return random.NextDouble() * 5 + 1; // Losowa prędkość z zakresu 1-6
-        }
+        
 
         public void StopBallAnimation()
         {
@@ -114,7 +105,7 @@ namespace Model
 
             for (int i = 0; i < numberOfBalls; i++)
             {
-                SolidColorBrush brush = new SolidColorBrush(Color.FromRgb((byte)random.Next(0, 128), (byte)random.Next(128, 256), (byte)random.Next(128, 256)));
+                SolidColorBrush brush = new SolidColorBrush(Color.FromRgb((byte)0, (byte)0, (byte)0));
                 Ellipse ellipse = new Ellipse
                 {
                     Width = 10,

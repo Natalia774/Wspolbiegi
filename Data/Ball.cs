@@ -33,7 +33,7 @@ namespace Data
 
         public void MoveBall()
         {
-            position += velocity; // Używamy prędkości do poruszania kuli
+            position += velocity;
         }
 
         public float X

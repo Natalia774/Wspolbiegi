@@ -17,7 +17,7 @@ namespace ViewModel
 
         public MainViewModel()
         {
-            _model = (ModelAPI)ModelAbstractAPI.CreateModelAPI(); // Rzutowanie na ModelAPI
+            _model = (ModelAPI)ModelAbstractAPI.CreateModelAPI();
             AddCommand = new RelayCommand(StartSimulation);
             RunCommand = new RelayCommand(StartAnimation);
             StopCommand = new RelayCommand(StopAnimation);
