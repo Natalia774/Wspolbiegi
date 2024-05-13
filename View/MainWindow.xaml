@@ -6,28 +6,28 @@
         xmlns:vm="clr-namespace:ViewModel;assembly=ViewModel"
         xmlns:local="clr-namespace:View"
         mc:Ignorable="d"
-        Title="MainWindow" Height="555.2" Width="665.6" Background="#e3c5e1" Foreground="Black" BorderBrush="Black">
-	<Window.DataContext>
-		<vm:MainViewModel/>
-	</Window.DataContext>
+        Title="MainWindow" Height="721.6" Width="1267.2" Background="#ffffff" Foreground="Black" BorderBrush="Black">
+    <Window.DataContext>
+        <vm:MainViewModel/>
+    </Window.DataContext>
 
-	<Grid Margin="0,0,0,-6" HorizontalAlignment="Left">
-		<ContentPresenter Content="{Binding Canvas}" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="290,0,0,210"/>
-		<Border BorderBrush="#000000" BorderThickness="5,5,5,5" Height="310" Width="513" HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="-0.276,0.478" Canvas.Left="-106" Canvas.Top="-177" Margin="-14,10,0,0" >
-			<Border.RenderTransform>
-				<TransformGroup>
-					<ScaleTransform/>
-					<SkewTransform/>
-					<RotateTransform Angle="90"/>
-					<TranslateTransform X="600.344" Y="-300.568"/>
-				</TransformGroup>
-			</Border.RenderTransform>
-		</Border>
+    <Grid Margin="10,10,45.6,10.4">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="300" />
+            <ColumnDefinition Width="500" />
+        </Grid.ColumnDefinitions>
 
-		<StackPanel Margin="40,30,0,0" Orientation="Vertical" HorizontalAlignment="Left">
-			<TextBox VerticalContentAlignment="Center" TextWrapping="Wrap" Text="{Binding NumberOfBallsToAdd}" Width="182" Height="88" TextAlignment="Center" FontSize="40" BorderBrush="#375573" BorderThickness="5,5,5,5" />
-			<Button Content="Add" Width="182" Height="88" FontSize="40" BorderThickness="5,5,5,5" BorderBrush="Black" Command="{Binding AddCommand}" Margin="0,10,0,0"/>
-			<Button Content="Start" Width="182" Height="88" FontSize="40" BorderThickness="5,5,5,5" BorderBrush="Black" Command="{Binding RunCommand}" Margin="0,10,0,0"/>
-		</StackPanel>
-	</Grid>
+        <StackPanel Margin="40,30,0,0" Orientation="Vertical" HorizontalAlignment="Left">
+            <TextBox VerticalContentAlignment="Center" TextWrapping="Wrap" Text="{Binding NumberOfBallsToAdd}" Width="182" Height="88" TextAlignment="Center" FontSize="40" BorderBrush="#375573" BorderThickness="5,5,5,5" />
+            <Button Content="Add" Width="182" Height="88" FontSize="40" BorderThickness="5,5,5,5" BorderBrush="Black" Command="{Binding AddCommand}" Margin="0,10,0,0"/>
+            <Button x:Name="StopButton" Content="Stop" Width="182" Height="88" FontSize="40" BorderThickness="5,5,5,5" BorderBrush="Black" Command="{Binding StopCommand}" Margin="0,10,0,0"/>
+            <Button Content="Start" Width="182" Height="88" FontSize="40" BorderThickness="5,5,5,5" BorderBrush="Black" Command="{Binding RunCommand}" Margin="0,10,0,0"/>
+        </StackPanel>
+
+        <Border BorderBrush="#000000"
+                BorderThickness="5"
+                Grid.Column="1" Margin="99.2,0,-96.4,0.6" >
+            <ContentPresenter Content="{Binding Canvas}" Margin="5,5,5,5" Width="400" Height="600" />
+        </Border>
+    </Grid>
 </Window>

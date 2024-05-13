@@ -1,7 +1,4 @@
-﻿using Logic;
-using Data;
-using Model;
-using System.Collections.ObjectModel;
+﻿using Model;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
@@ -12,16 +9,28 @@ namespace ViewModel
 {
     public class MainViewModel : INotifyPropertyChanged
     {
-        private readonly ModelAPI _model; 
+        private readonly ModelAPI _model;
         public int _numberOfBallsToAdd;
 
         public MainViewModel()
         {
             _model = (ModelAPI)ModelAbstractAPI.CreateModelAPI();
-            AddCommand = new RelayCommand(StartSimulation);
-            RunCommand = new RelayCommand(StartAnimation);
-            StopCommand = new RelayCommand(StopAnimation);
+
+            _model.IsAnimatingChanged += Model_IsAnimatingChanged; //rejestracja zdarzenia
+
+            AddCommand = new RelayCommand(StartSimulation, CanStartSimulation);
+            RunCommand = new RelayCommand(StartAnimation, CanStartAnimation);
+            StopCommand = new RelayCommand(StopAnimation, CanStopAnimation);
         }
+
+        private void Model_IsAnimatingChanged(object sender, EventArgs e)
+        {
+            ((RelayCommand)RunCommand).RaiseCanExecuteChanged();
+            ((RelayCommand)StopCommand).RaiseCanExecuteChanged();
+            ((RelayCommand)AddCommand).RaiseCanExecuteChanged();
+        }
+
+        public bool IsAnimating => _model.IsAnimating;
 
         public Canvas Canvas
         {
@@ -50,14 +59,35 @@ namespace ViewModel
             _model.CreateEllipses(NumberOfBallsToAdd);
         }
 
-        private void StartAnimation()
+        public void StartAnimation()
         {
-            _model.StartBallAnimation();
+            if (!IsAnimating)
+            {
+                _model.StartBallAnimation();
+            }
         }
 
-        private void StopAnimation()
+        public void StopAnimation()
         {
-            _model.StopBallAnimation();
+            if (IsAnimating)
+            {
+                _model.StopBallAnimation();
+            }
+        }
+
+        private bool CanStartSimulation()
+        {
+            return !_model.IsAnimating;
+        }
+
+        private bool CanStartAnimation()
+        {
+            return !_model.IsAnimating;
+        }
+
+        private bool CanStopAnimation()
+        {
+            return _model.IsAnimating;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

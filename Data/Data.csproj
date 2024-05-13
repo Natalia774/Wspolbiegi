@@ -43,7 +43,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Ball.cs" />
-    <Compile Include="BallsList.cs" />
+    <Compile Include="BallsCollection.cs" />
     <Compile Include="Board.cs" />
     <Compile Include="DataAbstractAPI.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

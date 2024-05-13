@@ -2,7 +2,7 @@
 {
     public static class Board
     {
-        internal static readonly int width = 1200;
-        internal static readonly int height = 700;
+        internal static readonly int width = 400;
+        internal static readonly int height = 600;
     }
 }
