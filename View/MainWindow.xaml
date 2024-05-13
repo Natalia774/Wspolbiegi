@@ -25,9 +25,7 @@
         </StackPanel>
 
         <Border BorderBrush="#000000"
-                BorderThickness="5"
-                Grid.Column="1" Margin="99.2,0,-96.4,0.6" >
-            <ContentPresenter Content="{Binding Canvas}" Margin="5,5,5,5" Width="400" Height="600" />
-        </Border>
+                BorderThickness="5" Margin="0,0,10.6,10.6" Grid.Column="1" Width="445" HorizontalAlignment="Right"/>
+        <ContentPresenter Content="{Binding Canvas}" Margin="25.2,10,54.6,29.6" Grid.Column="1"/>
     </Grid>
 </Window>
