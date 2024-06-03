@@ -1,16 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Data
 {
-    public interface IBall
+    public interface IBall : IObservable<IBall>
     {
         Vector2 Position { get; }
         Vector2 Velocity { get; set; }
-        float Mass { get; }
         void StartMoving();
         void StopMoving();
     }
@@ -18,21 +17,32 @@ namespace Data
 
     internal class Ball : IBall
     {
+        private readonly object PositionLock = new object();
+        private readonly object VelocityLock = new object();
         private Vector2 position;
         private Vector2 velocity;
-        private static int r = 25;
+        private static int r = 15;
+        internal readonly List<IObserver<IBall>> observers;
 
-        private float mass { get; set; }
+        private readonly ILogger _logger;
+        private readonly int id;
+
         private static readonly int MILISECONDS_PER_STEP = 1;
         private const float FIXED_STEP_SIZE = 0.6f;
         private bool isMoving = true;
-        private readonly object lockObject = new object();
 
-        internal Ball(Vector2 position, Vector2 velocity)
+        internal Ball(int id, Vector2 position, Vector2 velocity, ILogger logger)
         {
+            observers = new List<IObserver<IBall>>();
+            this.id = id;
             this.velocity = velocity;
             this.position = position;
-            this.mass = 100.0F;
+            this._logger = logger;
+        }
+
+        private void Log(string message)
+        {
+            _logger?.Log($"Ball {id}: {message}");
         }
 
         public static int GetBallRadius()
@@ -44,16 +54,10 @@ namespace Data
         {
             get
             {
-                lock (lockObject)
+                lock (PositionLock)
+                {
                     return position;
-            }
-        }
-
-        public float Mass
-        {
-            get
-            {
-                return mass;
+                }
             }
         }
 
@@ -61,34 +65,18 @@ namespace Data
         {
             get
             {
-                return velocity;
-
+                lock (VelocityLock)
+                {
+                    return velocity;
+                }
             }
 
             set
             {
-                lock (lockObject)
+                lock (VelocityLock)
                 {
                     velocity = value;
                 }
-
-            }
-        }
-
-        public void UpdatePosition(Vector2 newPosition)
-        {
-            lock (lockObject)
-            {
-                position = newPosition;
-            }
-        }
-
-        // Metoda do synchronizowanego aktualizowania prędkości kulki
-        public void UpdateVelocity(Vector2 newVelocity)
-        {
-            lock (lockObject)
-            {
-                velocity = newVelocity;
             }
         }
 
@@ -101,7 +89,17 @@ namespace Data
                 Vector2 newPosition = position + Vector2.Normalize(Velocity) * FIXED_STEP_SIZE;
                 Vector2 interpolatedPosition = Vector2.Lerp(position, newPosition, FIXED_STEP_SIZE);
 
-                UpdatePosition(interpolatedPosition);
+                lock (PositionLock)
+                {
+                    position = interpolatedPosition;
+                }
+
+                Log($"Ball moved to position: {interpolatedPosition.X}, {interpolatedPosition.Y}");
+
+                foreach (IObserver<Ball> observer in observers)
+                {
+                    observer.OnNext(this);
+                }
 
                 watch.Stop();
 
@@ -114,6 +112,32 @@ namespace Data
         public void StopMoving()
         {
             isMoving = false;
+            Log("Ball stopped moving");
+        }
+
+        public IDisposable Subscribe(IObserver<IBall> observer)
+        {
+            if (!observers.Contains(observer))
+                observers.Add(observer);
+            return new Unsubscriber(observers, observer);
+        }
+
+        private class Unsubscriber : IDisposable
+        {
+            private List<IObserver<IBall>> _observers;
+            private IObserver<IBall> _observer;
+
+            public Unsubscriber(List<IObserver<IBall>> observers, IObserver<IBall> observer)
+            {
+                this._observers = observers;
+                this._observer = observer;
+            }
+
+            public void Dispose()
+            {
+                if (_observer != null && _observers.Contains(_observer))
+                    _observers.Remove(_observer);
+            }
         }
     }
 }
