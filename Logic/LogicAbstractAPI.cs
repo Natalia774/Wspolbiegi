@@ -1,17 +1,18 @@
 ﻿using Data;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace Logic
 {
     public interface ICollisionHandler
     {
         event EventHandler<CollisionEventArgs> CollisionDetected;
-
         void HandleCollision(IBall ball1, IBall ball2);
     }
 
@@ -26,6 +27,7 @@ namespace Logic
             Ball2 = ball2;
         }
     }
+
     public abstract class LogicAbstractAPI : IObserver<IBall>, IObservable<int>
     {
         public abstract void Start();
@@ -54,6 +56,8 @@ namespace Logic
         public event EventHandler<CollisionEventArgs> CollisionDetected;
         private object lockObject = new object();
         private IObserver<int> observer = null;
+        private System.Timers.Timer logTimer;
+        private const string LogFilePath = "ball_positions_log.txt";
 
         private class Unsubscriber : IDisposable
         {
@@ -73,6 +77,9 @@ namespace Logic
         public LogicAPI()
         {
             this.dataAPI = DataAbstractAPI.CreateAPI();
+            logTimer = new System.Timers.Timer(3000);
+            logTimer.Elapsed += OnLogTimerElapsed;
+            logTimer.AutoReset = true; // Ustawienie AutoReset na true, aby timer uruchamiał się cyklicznie
         }
 
         public override Vector2 GetBallPosition(int index)
@@ -119,7 +126,7 @@ namespace Logic
                 bool overlap = true;
                 Vector2 position = new Vector2(0, 0);
 
-                //repeat until a non-overlapping position is found
+                // repeat until a non-overlapping position is found
                 while (overlap)
                 {
                     overlap = false;
@@ -127,7 +134,7 @@ namespace Logic
                         rand.Next(1 + GetBallRadius(), dataAPI.GetBoardWidth() - GetBallRadius() - 1),
                         rand.Next(1 + GetBallRadius(), dataAPI.GetBoardWidth() - GetBallRadius()) - 1);
 
-                    //check if the new position overlaps with any existing ball
+                    // check if the new position overlaps with any existing ball
                     foreach (var existingPosition in ballPositions)
                     {
                         if (Vector2.Distance(existingPosition, position) <= ballRadius)
@@ -136,9 +143,8 @@ namespace Logic
                             break;
                         }
                     }
-
                 }
-                //if no overlap, add the position to the list
+                // if no overlap, add the position to the list
                 lock (lockObject)
                 {
                     ballPositions.Add(position);
@@ -150,7 +156,7 @@ namespace Logic
                         (float)(rand.NextDouble() * maxVelocity.Y - (maxVelocity.Y / 2))
                     );
                     newBall.Velocity = velocity;
-                    _ = newBall.Subscribe(this); // subskrybujemy na powiadomienia o zmianach stanu dla newBall
+                    _ = newBall.Subscribe(this); // subscribe to state change notifications for newBall
                 }
             }
         }
@@ -181,6 +187,8 @@ namespace Logic
                 Thread thread = new Thread(new ThreadStart(ball.StartMoving));
                 thread.Start();
             }
+
+            logTimer.Start(); // Start the logging timer
         }
 
         public override void Stop()
@@ -192,8 +200,36 @@ namespace Logic
                 IBall ball = dataAPI.GetBall(i);
                 ball.StopMoving();
             }
+
+            logTimer.Stop(); // Stop the logging timer
         }
 
+        private void OnLogTimerElapsed(object sender, ElapsedEventArgs e)
+        {
+            // Wywołanie metody zapisującej pozycje kul do pliku przy każdym odstępie czasu timera
+            LogBallPositions();
+        }
+
+        private void LogBallPositions()
+        {
+            List<Vector2> allBallPositions;
+
+            lock (lockObject)
+            {
+                // Pobranie pozycji kul w sekcji chronionej lockiem
+                allBallPositions = dataAPI.GetBallsPositions();
+            }
+
+            using (StreamWriter writer = new StreamWriter(LogFilePath, true))
+            {
+                writer.WriteLine($"{DateTime.Now}: Logging ball positions");
+                for (int i = 0; i < allBallPositions.Count; i++)
+                {
+                    Vector2 position = allBallPositions[i];
+                    writer.WriteLine($"Ball {i + 1}: Position = {position}");
+                }
+            }
+        }
 
         public override async Task DetectAndHandleCollisions()
         {
