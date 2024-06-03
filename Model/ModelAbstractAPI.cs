@@ -6,13 +6,15 @@ using System.Windows.Controls;
 using System.Collections.Generic;
 using System.Windows;
 using System.Numerics;
-using System.Threading;
 
 
 namespace Model
 {
-    public abstract class ModelAbstractAPI
+    public abstract class ModelAbstractAPI : IObserver<int>
     {
+        public abstract void OnCompleted();
+        public abstract void OnError(Exception error);
+        public abstract void OnNext(int value);
         public abstract void CreateEllipses(int nrOfBalls);
         public abstract Canvas Canvas { get; set; }
         public abstract List<Ellipse> ellipseCollection { get; }
@@ -31,10 +33,8 @@ namespace Model
         public override Canvas Canvas { get; set; }
         private readonly Random random;
         private int ballsCreated = 0;
-        private List<(Ellipse, EventHandler)> ballHandlers;
         public event EventHandler IsAnimatingChanged;
-        private Dictionary<int, Ellipse> ellipseDictionary = new Dictionary<int, Ellipse>();
-
+        private readonly IDisposable unsubscriber;
 
 
         private bool _isAnimating;
@@ -63,11 +63,20 @@ namespace Model
                 VerticalAlignment = VerticalAlignment.Stretch,
                 Width = logicAPI.GetBoardWidth(),
                 Height = logicAPI.GetBoardHeight(),
-                
             };
             random = new Random();
 
-            ballHandlers = new List<(Ellipse, EventHandler)>();
+            unsubscriber = logicAPI.Subscribe(this);
+        }
+
+        public override void OnCompleted()
+        {
+            unsubscriber.Dispose();
+        }
+
+        public override void OnError(Exception error)
+        {
+            throw new NotImplementedException();
         }
 
 
@@ -77,7 +86,7 @@ namespace Model
 
             for (int i = ballsCreated; i < numberOfBalls + ballsCreated; i++)
             {
-                SolidColorBrush brush = new SolidColorBrush(Color.FromRgb((byte)random.Next(128, 256), (byte)random.Next(0, 1), (byte)random.Next(128, 256)));
+                SolidColorBrush brush = new SolidColorBrush(Color.FromRgb((byte)random.Next(0, 128), (byte)random.Next(128, 256), (byte)random.Next(128, 256)));
                 Ellipse ellipse = new Ellipse
                 {
                     Width = logicAPI.GetBallRadius() * 2,
@@ -94,37 +103,27 @@ namespace Model
                 Canvas.SetTop(ellipse, y);
 
                 ellipseCollection.Add(ellipse);
-                int ellipseIndex = ellipseCollection.Count - 1;
-                ellipseDictionary.Add(ellipseIndex, ellipse);
-
                 Canvas.Children.Add(ellipse);
-
-                EventHandler renderingHandler = CreateRenderingHandler(ellipse, ellipseIndex);
-                ballHandlers.Add((ellipse, renderingHandler));
             }
 
             ballsCreated += numberOfBalls;
         }
 
-        private EventHandler CreateRenderingHandler(Ellipse ellipse, int ellipseIndex)
+        public override void OnNext(int value)
         {
-            return (sender, e) =>
+            Application.Current.Dispatcher.Invoke(() =>
             {
-                if (Canvas.Children.Count != 0)
+
+                // Aktualizacja pozycji kul na kanwie na podstawie wartości otrzymanej z logiki
+                for (int i = 0; i < ellipseCollection.Count; i++)
                 {
-                    Vector2 ballPosition = logicAPI.GetBallPosition(ellipseIndex);
+                    Vector2 ballPosition = logicAPI.GetBallPosition(i);
+                    Ellipse ellipse = ellipseCollection[i];
+
                     Canvas.SetLeft(ellipse, ballPosition.X + logicAPI.GetBallRadius());
                     Canvas.SetTop(ellipse, ballPosition.Y - logicAPI.GetBallRadius());
-
-                    logicAPI.DetectAndHandleCollisions();
-                    Thread.Sleep(5);
                 }
-
-                else
-                {
-                    Environment.Exit(0);
-                }
-            };
+            });
         }
 
 
@@ -134,10 +133,6 @@ namespace Model
             {
                 logicAPI.Start();
                 IsAnimating = true;
-                foreach (var handler in ballHandlers)
-                {
-                    CompositionTarget.Rendering += handler.Item2;
-                }
             }
         }
 
@@ -146,13 +141,15 @@ namespace Model
             if (IsAnimating)
             {
                 logicAPI.Stop();
-                ballHandlers = null;
-                ellipseCollection.Clear();
-                logicAPI.ClearBalls();
-                ellipseDictionary.Clear();
                 IsAnimating = false;
-                Canvas.Children.Clear();
+
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    Application.Current.Shutdown();
+                    Environment.Exit(0);
+                });
             }
         }
+
     }
 }

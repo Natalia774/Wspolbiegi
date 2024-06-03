@@ -12,33 +12,31 @@ namespace DataTest
         [TestInitialize]
         public void Setup()
         {
-            // Inicjalizujemy mock dla interfejsu DataAbstractAPI
+            //mock initialization for the DataAbstractAPI interface
             dataAPIMock = new Mock<DataAbstractAPI>();
 
-            // Ustawiamy zachowanie mocka dla metody GetBoardWidth
+            //setting the mock behavior for the GetBoardWidth method
             dataAPIMock.Setup(m => m.GetBoardWidth()).Returns(1200);
 
-            // Ustawiamy zachowanie mocka dla metody GetBoardHeight
+            //setting the mock behavior for the GetBoardHeight method 
             dataAPIMock.Setup(m => m.GetBoardHeight()).Returns(700);
         }
 
         [TestMethod]
         public void TestCreateApi()
         {
-            // Tworzymy instancję testowanej klasy i wstrzykujemy mocka
+            //create an instance of the tested class and inject the mock
             DataAbstractAPI DApi = dataAPIMock.Object;
 
-            // Aserty
             Assert.IsNotNull(DApi);
         }
 
         [TestMethod]
         public void TestGetWidthHeight()
         {
-            // Tworzymy instancję testowanej klasy i wstrzykujemy mocka
+            //create an instance of the tested class and inject the mock
             DataAbstractAPI DApi = dataAPIMock.Object;
 
-            // Aserty
             Assert.AreEqual(1200, DApi.GetBoardWidth());
             Assert.AreEqual(700, DApi.GetBoardHeight());
         }
