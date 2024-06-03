@@ -2,31 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Logic
 {
-    public interface ICollisionHandler
-    {
-        event EventHandler<CollisionEventArgs> CollisionDetected;
-
-        void HandleCollision(IBall ball1, IBall ball2);
-    }
-
-    public class CollisionEventArgs : EventArgs
-    {
-        public IBall Ball1 { get; }
-        public IBall Ball2 { get; }
-
-        public CollisionEventArgs(IBall ball1, IBall ball2)
-        {
-            Ball1 = ball1;
-            Ball2 = ball2;
-        }
-    }
-    public abstract class LogicAbstractAPI : IObserver<IBall>, IObservable<int>
+    public abstract class LogicAbstractAPI
     {
         public abstract void Start();
         public abstract void Stop();
@@ -36,39 +17,18 @@ namespace Logic
         public abstract int GetBallRadius();
         public abstract void CreateBalls(int nrOfBalls);
         public abstract IBall GetBall(int index);
-        public abstract Task DetectAndHandleCollisions();
+        public abstract void DetectAndHandleCollisions();
         public abstract void ClearBalls();
-        public abstract void OnCompleted();
-        public abstract void OnError(Exception error);
-        public abstract void OnNext(IBall ball);
-        public abstract IDisposable Subscribe(IObserver<int> observer);
         public static LogicAbstractAPI CreateLogicAPI()
         {
             return new LogicAPI();
         }
     }
 
-    public class LogicAPI : LogicAbstractAPI, ICollisionHandler
+    public class LogicAPI : LogicAbstractAPI
     {
         private DataAbstractAPI dataAPI;
-        public event EventHandler<CollisionEventArgs> CollisionDetected;
         private object lockObject = new object();
-        private IObserver<int> observer = null;
-
-        private class Unsubscriber : IDisposable
-        {
-            private IObserver<int> _observer;
-
-            public Unsubscriber(IObserver<int> observer)
-            {
-                this._observer = observer;
-            }
-
-            public void Dispose()
-            {
-                _observer = null;
-            }
-        }
 
         public LogicAPI()
         {
@@ -117,58 +77,44 @@ namespace Logic
             for (int i = 0; i < nrOfBalls; i++)
             {
                 bool overlap = true;
-                Vector2 position = new Vector2(0, 0);
+                Vector2 position;
 
-                //repeat until a non-overlapping position is found
+                // Repeat until a non-overlapping position is found
                 while (overlap)
                 {
                     overlap = false;
                     position = new Vector2(
-                        rand.Next(1 + GetBallRadius(), dataAPI.GetBoardWidth() - GetBallRadius() - 1),
-                        rand.Next(1 + GetBallRadius(), dataAPI.GetBoardWidth() - GetBallRadius()) - 1);
+                        rand.Next(GetBallRadius(), dataAPI.GetBoardWidth() - GetBallRadius()),
+                        rand.Next(GetBallRadius(), dataAPI.GetBoardWidth() - GetBallRadius()));
 
-                    //check if the new position overlaps with any existing ball
+                    // Check if the new position overlaps with any existing ball
                     foreach (var existingPosition in ballPositions)
                     {
-                        if (Vector2.Distance(existingPosition, position) <= ballRadius)
+                        if (Vector2.Distance(existingPosition, position) < ballRadius)
                         {
                             overlap = true;
                             break;
                         }
                     }
 
-                }
-                //if no overlap, add the position to the list
-                lock (lockObject)
-                {
-                    ballPositions.Add(position);
-                    IBall newBall = dataAPI.CreateBall(position, Vector2.Zero);
+                    // If no overlap, add the position to the list
+                    if (!overlap)
+                    {
+                        lock (lockObject)
+                        {
+                            ballPositions.Add(position);
+                            IBall newBall = dataAPI.CreateBall(position, Vector2.Zero);
 
-                    Vector2 maxVelocity = new Vector2(6.0f, 6.0f);
-                    Vector2 velocity = new Vector2(
-                        (float)(rand.NextDouble() * maxVelocity.X - (maxVelocity.X / 2)),
-                        (float)(rand.NextDouble() * maxVelocity.Y - (maxVelocity.Y / 2))
-                    );
-                    newBall.Velocity = velocity;
-                    _ = newBall.Subscribe(this); // subskrybujemy na powiadomienia o zmianach stanu dla newBall
+                            Vector2 maxVelocity = new Vector2(6.0f, 6.0f);
+                            Vector2 velocity = new Vector2(
+                                (float)(rand.NextDouble() * maxVelocity.X - (maxVelocity.X / 2)),
+                                (float)(rand.NextDouble() * maxVelocity.Y - (maxVelocity.Y / 2))
+                            );
+                            newBall.Velocity = velocity;
+                        }
+                    }
                 }
             }
-        }
-
-        public override IDisposable Subscribe(IObserver<int> observer)
-        {
-            this.observer = observer;
-            return new Unsubscriber(this.observer);
-        }
-
-        public override void OnCompleted()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void OnError(Exception error)
-        {
-            throw new NotImplementedException();
         }
 
         public override void Start()
@@ -179,6 +125,7 @@ namespace Logic
             {
                 IBall ball = dataAPI.GetBall(i);
                 Thread thread = new Thread(new ThreadStart(ball.StartMoving));
+                thread.Name = "ball no" + i;
                 thread.Start();
             }
         }
@@ -194,63 +141,49 @@ namespace Logic
             }
         }
 
-
-        public override async Task DetectAndHandleCollisions()
+        public override void DetectAndHandleCollisions()
         {
-            await Task.Run(() =>
+            List<Vector2> allBallPositions = dataAPI.GetBallsPositions();
+
+            for (int i = 0; i < allBallPositions.Count; i++)
             {
-                List<Vector2> allBallPositions = dataAPI.GetBallsPositions();
-
-                for (int i = 0; i < dataAPI.GetBallsPositions().Count; i++)
+                for (int j = i + 1; j < allBallPositions.Count; j++)
                 {
-                    for (int j = i + 1; j < dataAPI.GetBallsPositions().Count; j++)
+                    Vector2 position1 = allBallPositions[i];
+                    Vector2 position2 = allBallPositions[j];
+
+                    double distance = Vector2.Distance(position1, position2);
+                    double radiusSum = GetBallRadius() * 2;
+
+                    if (distance < radiusSum)
                     {
-                        Vector2 position1 = dataAPI.GetBallsPositions()[i];
-                        Vector2 position2 = dataAPI.GetBallsPositions()[j];
-
-                        double distance = Vector2.Distance(position1, position2);
-                        double radiusSum = GetBallRadius() * 2;
-
-                        if (distance <= radiusSum)
-                        {
-                            HandleCollision(dataAPI.GetBall(i), dataAPI.GetBall(j));
-                        }
+                        HandleBallCollision(dataAPI.GetBall(i), dataAPI.GetBall(j));
                     }
                 }
+            }
 
-                for (int i = 0; i < dataAPI.GetBallsPositions().Count; i++)
-                {
-                    Vector2 position = dataAPI.GetBallsPositions()[i];
-
-                    if (position.X <= 0 || position.Y <= 0 ||
-                        position.X + GetBallRadius() >= GetBoardWidth() ||
-                        position.Y + GetBallRadius() >= GetBoardHeight())
-                    {
-                        HandleWallCollision(dataAPI.GetBall(i));
-                    }
-                }
-            });
-        }
-
-        public override void OnNext(IBall ball)
-        {
-            lock (lockObject)
+            for (int i = 0; i < allBallPositions.Count; i++)
             {
-                int index = dataAPI.GetBallIndex(ball);
-                observer.OnNext(index);
+                Vector2 position = allBallPositions[i];
 
-                _ = DetectAndHandleCollisions();
+                if (position.X < 0 || position.Y < 0 ||
+                    position.X + GetBallRadius() * 2 >= GetBoardWidth() ||
+                    position.Y + GetBallRadius() * 2 >= GetBoardHeight())
+                {
+                    HandleWallCollision(dataAPI.GetBall(i));
+                    Console.WriteLine("Collision detected");
+                }
             }
         }
 
-        public void HandleCollision(IBall ball1, IBall ball2)
+        private void HandleBallCollision(IBall ball1, IBall ball2)
         {
             Vector2 normal = Vector2.Normalize(ball2.Position - ball1.Position);
             Vector2 relativeVelocity = ball2.Velocity - ball1.Velocity;
 
             // Calculate velocities after collision
-            float m1 = dataAPI.GetBallMass();
-            float m2 = dataAPI.GetBallMass();
+            float m1 = ball1.Mass;
+            float m2 = ball2.Mass;
             float v1n = Vector2.Dot(normal, ball1.Velocity);
             float v2n = Vector2.Dot(normal, ball2.Velocity);
             float v1nAfter = ((m1 - m2) * v1n + 2 * m2 * v2n) / (m1 + m2);
@@ -263,24 +196,7 @@ namespace Logic
 
         private void HandleWallCollision(IBall ball)
         {
-            Vector2 velocity = ball.Velocity;
-
-            int boardWidth = GetBoardWidth();
-            int boardHeight = GetBoardHeight();
-
-            Vector2 position = ball.Position;
-
-            if (position.X <= 0 || position.X >= boardWidth)
-            {
-                velocity.X *= -1;
-            }
-
-            if (position.Y <= 0 || position.Y >= boardHeight)
-            {
-                velocity.Y *= -1;
-            }
-
-            ball.Velocity = velocity;
+            ball.Velocity *= -1;
         }
     }
 }
