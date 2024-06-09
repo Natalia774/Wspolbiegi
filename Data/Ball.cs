@@ -40,10 +40,6 @@ namespace Data
             this._logger = logger;
         }
 
-        private void Log(string message)
-        {
-            _logger?.Log($"Ball {id}: {message}");
-        }
 
         public static int GetBallRadius()
         {
@@ -94,7 +90,6 @@ namespace Data
                     position = interpolatedPosition;
                 }
 
-                Log($"Ball moved to position: {interpolatedPosition.X}, {interpolatedPosition.Y}");
 
                 foreach (IObserver<Ball> observer in observers)
                 {
@@ -112,7 +107,6 @@ namespace Data
         public void StopMoving()
         {
             isMoving = false;
-            Log("Ball stopped moving");
         }
 
         public IDisposable Subscribe(IObserver<IBall> observer)
